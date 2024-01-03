@@ -1,2 +1,2 @@
 # attendanceapp
-A task to bulid a web application of attendance management of employees
+a web application for attendance management of employees
