@@ -3,12 +3,43 @@ from flask import Flask, render_template, request, redirect, url_for
 import boto3
 from boto3 import resource
 from boto3.dynamodb.conditions import Attr
-
+from apscheduler.schedulers.background import BackgroundScheduler
+import time
 
 dynamodb = boto3.resource('dynamodb')
 table = resource('dynamodb').Table('for_task')
 
 app = Flask(__name__)
+
+def overtime():
+    current_time = datetime.datetime.now()
+    if current_time.hour >= 18 and current_time.weekday() < 5:
+        response = table.scan(
+            FilterExpression=Attr('type').eq('status') & Attr('status').eq('出勤中')
+        )
+        items = response['Items']
+        if items:
+            for item in items:
+                table.update_item(
+                    Key={
+                        'name': item['name'],
+                        'type': 'status',
+                    },
+                    UpdateExpression='set #st = :s',
+                    ExpressionAttributeNames={
+                        '#st': 'status'
+                    },
+                    ExpressionAttributeValues={
+                        ':s': '残業中'
+                    }
+                )
+        time.sleep(3600)
+    else:
+        time.sleep(60)
+
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.add_job(overtime, 'cron', hour=18, day_of_week='mon-fri')
+scheduler.start()
 @app.route('/')
 def home():
     status = request.args.get('status', 'all')
@@ -23,6 +54,7 @@ def home():
         )
         items = response['Items']
     return render_template("index.html", employees=items)
+
 
 @app.route("/punch")
 def punch():
@@ -55,4 +87,3 @@ def punch():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
