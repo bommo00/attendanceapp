@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Library</title>
+  </head>
+  <body>
+    <h1>出退勤管理システム</h1>
+    {% if employees == []: %}
+    <p>なし</p>
+    {% endif %}
+    <ul>
+      <a href="{{ url_for('home', status='all') }}">すべて</a>
+      <a href="{{ url_for('home', status='未出勤') }}">未出勤</a>
+      <a href="{{ url_for('home', status='出勤中') }}">出勤中</a>
+      <a href="{{ url_for('home', status='残業中') }}">残業中</a>
+      {% for employee in employees %}
+      <li>
+        {{employee['name']}} - {{employee['department']}} - {{employee['status']}}
+        <a href="{{ url_for('punch', id=employee['id']) }}">出退勤</a>
+      </li>
+      {% endfor %}
+    </ul>
+    <a href="{{ url_for('home') }}">HOME</a>
+  </body>
+</html>
